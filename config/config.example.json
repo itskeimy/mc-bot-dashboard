@@ -1,0 +1,50 @@
+{
+  "server": {
+    "port": 3000,
+    "viewerPort": 3007
+  },
+  "minecraft": {
+    "host": "YOUR_MINECRAFT_SERVER_IP",
+    "port": 25565,
+    "username": "YOUR_BOT_USERNAME",
+    "auth": "microsoft",
+    "version": "1.21.4",
+    "profilesFolder": "./nmp-cache",
+    "autoReconnect": true,
+    "reconnectDelay": 30000
+  },
+  "botState": {
+    "isAttacking": false,
+    "isAntiAfk": false,
+    "isLooker": false,
+    "isFollowing": false,
+    "isAntiSpam": true,
+    "autoTotem": true,
+    "autoArmor": true,
+    "autoEat": true
+  },
+  "viewer": {
+    "firstPerson": false,
+    "viewDistance": 12,
+    "viewMode": "free"
+  },
+  "chestSorting": {
+    "searchRadius": 16,
+    "sortRetries": 3,
+    "timeoutMs": 8000
+  },
+  "telegram": {
+    "enabled": false,
+    "token": "YOUR_TELEGRAM_BOT_TOKEN",
+    "chatId": "YOUR_TELEGRAM_CHAT_ID",
+    "forwardMcToTg": true,
+    "forwardTgToMc": true,
+    "notifyEvents": {
+      "spawn": true,
+      "kick": true,
+      "death": true,
+      "whisper": true
+    },
+    "allowedUsers": []
+  }
+}

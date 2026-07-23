@@ -1,0 +1,28 @@
+{
+  "name": "mc-bot-dashboard",
+  "version": "1.0.0",
+  "description": "Autonomous Minecraft AFK Bot with Real-Time Web Dashboard, 3D View, 24/7 AFK Farming, Chest Sorter & Telegram Remote Control",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "canvas": "^3.2.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mcraft-fun-mineflayer": "^0.1.23",
+    "minecraft-data": "^3.111.0",
+    "mineflayer": "^4.33.0",
+    "mineflayer-auto-eat": "^5.0.3",
+    "mineflayer-pathfinder": "^2.4.5",
+    "node-telegram-bot-api": "^1.2.0",
+    "prismarine-chunk": "^1.40.0",
+    "prismarine-viewer": "^1.33.0",
+    "puppeteer": "^25.3.0",
+    "socket.io": "^4.8.1"
+  }
+}

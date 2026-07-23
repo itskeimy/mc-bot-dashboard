@@ -1,0 +1,49 @@
+{
+  "server": {
+    "port": 3000,
+    "viewerPort": 3007
+  },
+  "minecraft": {
+    "host": "9b9t.com",
+    "port": 25565,
+    "username": "ItsKeimy_BOT",
+    "auth": "microsoft",
+    "version": "1.21.4",
+    "profilesFolder": "./nmp-cache",
+    "autoReconnect": true,
+    "reconnectDelay": 30000
+  },
+  "botState": {
+    "isAttacking": true,
+    "isAntiAfk": true,
+    "isLooker": false,
+    "isFollowing": false,
+    "isAntiSpam": true,
+    "autoTotem": true,
+    "autoArmor": true,
+    "autoEat": true
+  },
+  "viewer": {
+    "firstPerson": true,
+    "viewDistance": 6
+  },
+  "chestSorting": {
+    "searchRadius": 16,
+    "sortRetries": 3,
+    "timeoutMs": 8000
+  },
+  "telegram": {
+    "enabled": false,
+    "token": "",
+    "chatId": "",
+    "forwardMcToTg": true,
+    "forwardTgToMc": true,
+    "notifyEvents": {
+      "spawn": true,
+      "kick": true,
+      "death": true,
+      "whisper": true
+    },
+    "allowedUsers": []
+  }
+}

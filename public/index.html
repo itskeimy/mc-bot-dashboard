@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Bot Dashboard</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="stylesheet" href="style.css?v=5008">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/three.min.js"></script>
+    <script src="js/skin3d.js?v=5008"></script>
+    <script src="js/sounds.js?v=5008"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/inventory.js?v=5008"></script>
+    <script src="js/ui.js?v=5008"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/radar.js"></script>
+    <script src="js/waypoints.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/farm.js"></script>
+    <script src="js/socket.js"></script>
+</head>
+<body class="theme-dark">
+    <div id="resize-overlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="mc-panel top-nav-panel" style="margin-bottom: 12px; padding: 10px 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--mc-panel-border); padding-bottom: 8px; margin-bottom: 8px;">
+                <h3 style="margin: 0; color: #ffffff; text-shadow: 2px 2px #000; font-size: 15px; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                    <img src="mc_assets/item/diamond_sword.png" class="mc-icon" alt="Sword"> BOT CONTROL
+                </h3>
+                <span class="bot-status-badge" id="top-status-badge">🟢 ONLINE</span>
+            </div>
+            
+            <div class="top-controls-grid">
+                <button id="btn-sound-toggle" class="mc-btn nav-control-btn" onclick="sounds.toggle()" title="Переключить звук">
+                    🔊 Sound: ON
+                </button>
+                <select id="theme-select" class="mc-input nav-control-select" onchange="setTheme(this.value)" title="Сменить тему">
+                    <option value="dark">🌲 Overworld</option>
+                    <option value="nether">🔥 Nether</option>
+                    <option value="end">🔮 The End</option>
+                    <option value="emerald">💎 Emerald</option>
+                    <option value="sculk">🧊 Deep Dark</option>
+                    <option value="redstone">🔴 Redstone</option>
+                </select>
+                <button class="mc-btn nav-control-btn" onclick="toggleSettingsModal()" title="Настройки бота">
+                    <img src="mc_assets/item/comparator.png" class="mc-icon" alt="Settings"> Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- STATUS PANEL -->
+        <div class="mc-panel" style="margin-top: 12px;">
+            <div class="status-row">
+                <span class="status-label">Health</span>
+                <div id="hp-container" class="mc-sprites-container"></div>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Food</span>
+                <div id="food-container" class="mc-sprites-container"></div>
+            </div>
+            <div class="xp-bar-container">
+                <div id="xp-fill" class="xp-fill"></div>
+                <div id="xp-level" class="xp-level">0</div>
+            </div>
+
+            <div style="text-align: center; margin-top: 10px; font-size: 0.85em; color: #aaa; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <img src="mc_assets/item/compass_00.png" class="mc-icon" alt="Compass"> F3 Pos | X: <span id="coords-x" style="color:#55ff55">0</span>
+                Y: <span id="coords-y" style="color:#55ff55">0</span>
+                Z: <span id="coords-z" style="color:#55ff55">0</span>
+            </div>
+        </div>
+
+        <!-- RADAR & REAL MINIMAP -->
+        <div class="mc-panel radar-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <h4 style="margin: 0; color: #55ff55; display: flex; align-items: center; gap: 4px; font-size: 13px;">
+                    <img src="mc_assets/item/recovery_compass_00.png" class="mc-icon" alt="Radar"> Real Minimap
+                </h4>
+                <div style="display: flex; gap: 3px;">
+                    <button id="radar-btn-map" class="mc-btn minimap-mode-btn active" title="Real Terrain Map" onclick="setRadarMode('map')">🗺️</button>
+                    <button id="radar-btn-radar" class="mc-btn minimap-mode-btn" title="Radar Grid" onclick="setRadarMode('radar')">📡</button>
+                </div>
+            </div>
+
+            <div style="position: relative; display: inline-block;">
+                <canvas id="radar-canvas" width="170" height="170"></canvas>
+                <div class="minimap-zoom-controls">
+                    <button class="mc-btn zoom-btn" onclick="zoomRadar(0.2)">+</button>
+                    <button class="mc-btn zoom-btn" onclick="zoomRadar(-0.2)">-</button>
+                </div>
+            </div>
+
+            <div style="font-size: 10px; color: #aaa; margin-top: 4px; margin-bottom: 8px;">
+                <span style="color:#55ffff">● Player</span> |
+                <span style="color:#ff5555">● Hostile</span> |
+                <span style="color:#ffff55">● Mob</span> |
+                <span style="color:#00e5ff">📍 WP</span>
+            </div>
+            <button class="mc-btn" style="background-color: #2e7d32 !important;" onclick="toggleMapModal()">
+                <img src="mc_assets/item/map.png" class="mc-icon" alt="Map"> Open World Map (HD)
+            </button>
+        </div>
+
+        <!-- INVENTORY SEARCH & GRID -->
+        <div class="mc-panel" style="text-align: center;">
+            <h4 style="margin: 0 0 8px 0; color: #ffaa00; justify-content: center;">
+                <img src="mc_assets/item/chest_minecart.png" class="mc-icon" alt="Chest"> Interactive Inventory
+            </h4>
+            <div style="margin-bottom: 8px;">
+                <input type="text" class="mc-input" style="width: 100%; font-size: 11px; padding: 4px;" placeholder="🔍 Поиск предмета..." oninput="filterInventory(this.value)">
+            </div>
+
+            <!-- MINECRAFT CLASSIC INVENTORY TOP LAYOUT -->
+            <div class="inv-top-layout">
+                <!-- 1. ARMOR SLOTS (LEFT) -->
+                <div class="inv-armor-box">
+                    <div class="inv-container" style="padding: 2px;">
+                        <div id="inv-armor" class="inventory-armor-grid"></div>
+                    </div>
+                </div>
+
+                <!-- 2. 3D PLAYER SKIN & OFFHAND -->
+                <div class="player-skin-avatar-wrapper">
+                    <div class="player-skin-avatar-container" title="3D Персонаж (Перетащите мышь для вращения)">
+                        <div id="player-skin-avatar-3d" style="width: 120px; height: 140px; cursor: grab;"></div>
+                    </div>
+                    <div class="inv-offhand-wrapper" title="Вторая рука (Offhand)">
+                        <div class="inv-container" style="padding: 2px;">
+                            <div id="inv-offhand"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. CRAFTING SECTION (RIGHT) -->
+                <div class="inv-crafting-box">
+                    <div class="inv-crafting-title">Crafting</div>
+                    <div class="inv-crafting-row">
+                        <div class="inv-container" style="padding: 2px;">
+                            <div id="inv-crafting-input" class="inventory-crafting-input-grid"></div>
+                        </div>
+                        <div class="crafting-arrow">➔</div>
+                        <div class="inv-container" style="padding: 2px;">
+                            <div id="inv-crafting-output"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN INVENTORY & HOTBAR COMBINED (MINECRAFT STYLE) -->
+            <div style="text-align: center;">
+                <div class="inv-container">
+                    <div id="inv-main" class="inventory-grid"></div>
+                    <div class="inv-separator"></div>
+                    <div id="inv-hotbar" class="inventory-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOOLS (QUICK TOGGLES) -->
+        <div class="mc-panel">
+            <h4 style="margin: 0 0 8px 0; color: #55ffff;">
+                <img src="mc_assets/item/redstone.png" class="mc-icon" alt=""> Tools
+            </h4>
+            <button class="mc-btn" onclick="toggle('isAttacking')">
+                <img src="mc_assets/item/iron_sword.png" class="mc-icon" alt="Attack"> Auto-Attack: <span id="s-isAttacking">ON</span>
+            </button>
+            <button class="mc-btn" onclick="toggle('isAntiAfk')">
+                <img src="mc_assets/item/feather.png" class="mc-icon" alt="AFK"> Anti-AFK: <span id="s-isAntiAfk">ON</span>
+            </button>
+            <button class="mc-btn" onclick="toggle('isLooker')">
+                <img src="mc_assets/item/ender_pearl.png" class="mc-icon" alt="Looker"> Looker: <span id="s-isLooker">OFF</span>
+            </button>
+            <button class="mc-btn" onclick="toggle('isAntiSpam')">
+                <img src="mc_assets/item/paper.png" class="mc-icon" alt="Spam"> Anti-Spam: <span id="s-isAntiSpam">ON</span>
+            </button>
+            <button class="mc-btn" onclick="toggle('autoTotem')">
+                <img src="mc_assets/item/totem_of_undying.png" class="mc-icon" alt="Totem"> Auto-Totem: <span id="s-autoTotem">ON</span>
+            </button>
+            <button class="mc-btn" onclick="toggle('autoArmor')">
+                <img src="mc_assets/item/diamond_chestplate.png" class="mc-icon" alt="Armor"> Auto-Armor: <span id="s-autoArmor">ON</span>
+            </button>
+            <button class="mc-btn" onclick="toggle('autoEat')">
+                <img src="mc_assets/item/golden_apple.png" class="mc-icon" alt="Auto-Eat"> Auto-Eat: <span id="s-autoEat">ON</span>
+            </button>
+            <button class="mc-btn" onclick="toggleTabList()">
+                <img src="mc_assets/item/writable_book.png" class="mc-icon" alt="TAB"> Server List (TAB)
+            </button>
+            <button class="mc-btn" style="background-color: #c62828 !important;" onclick="socket.emit('reconnect')">
+                <img src="mc_assets/item/redstone.png" class="mc-icon" alt="Reconnect"> Reconnect Bot
+            </button>
+        </div>
+
+        <!-- ENVIRONMENT & SESSION STATS -->
+        <div class="mc-panel">
+            <h4 style="margin: 0 0 8px 0; color: #ffff55;">
+                <img src="mc_assets/item/clock_00.png" class="mc-icon" alt="Clock"> Session & Environment
+            </h4>
+            <div class="env-grid">
+                <div class="env-item">Time: <span id="stat-tod" class="env-val">Day ☀️</span></div>
+                <div class="env-item">Dim: <span id="stat-dim" class="env-val">Overworld</span></div>
+                <div class="env-item">Biome: <span id="stat-bio" class="env-val">Plains</span></div>
+                <div class="env-item">Walked: <span id="stat-dist" class="env-val">0m</span></div>
+                <div class="env-item">Kills: <span id="stat-kills" class="env-val">0</span></div>
+            </div>
+        </div>
+
+        <!-- WASD & CONTROL MODE -->
+        <div class="controls-section mc-panel">
+            <button id="btn-toggle-controls" class="mc-btn">🎮 Control Mode: OFF</button>
+            <div id="wasd-controls" class="wasd-grid">
+                <button id="btn-w" class="mc-btn wasd-btn wasd-w">W</button>
+                <button id="btn-a" class="mc-btn wasd-btn wasd-a">A</button>
+                <button id="btn-s" class="mc-btn wasd-btn wasd-s">S</button>
+                <button id="btn-d" class="mc-btn wasd-btn wasd-d">D</button>
+            </div>
+            <div class="action-row">
+                <button id="btn-action-jump" class="mc-btn">🚀 Jump</button>
+                <button id="btn-action-attack" class="mc-btn">
+                    <img src="mc_assets/item/iron_sword.png" class="mc-icon" alt="Attack"> Attack
+                </button>
+                <button id="btn-action-use" class="mc-btn">🛡️ Use</button>
+            </div>
+        </div>
+
+        <!-- WAYPOINTS PANEL -->
+        <div class="mc-panel wp-section">
+            <h4 style="margin: 0 0 8px 0; color: #55ffff;">
+                <img src="mc_assets/item/ender_eye.png" class="mc-icon" alt="Waypoints"> Waypoints Navigation
+            </h4>
+            <div class="wp-input-row">
+                <input type="text" id="wp-name-input" class="mc-input" placeholder="Имя точки (напр. База)...">
+                <button id="btn-add-wp" class="mc-btn" style="width: auto; margin:0; padding: 4px 10px;">+ Add</button>
+            </div>
+            <div id="waypoints-list" class="waypoints-list"></div>
+            <button id="btn-stop-nav" class="mc-btn" style="margin-top: 8px; background-color: #aa0000 !important;">🛑 Stop Navigation</button>
+        </div>
+
+        <!-- AUTOMATION & FARMING -->
+        <div class="mc-panel">
+            <h4 style="margin: 0 0 8px 0; color: #87ff2a;">
+                <img src="mc_assets/item/golden_hoe.png" class="mc-icon" alt="Farm"> Auto-Farm & Automation
+            </h4>
+            <div style="margin-bottom: 8px;">
+                <button class="mc-btn" onclick="toggle('autoFarm')">
+                    <img src="mc_assets/item/wheat.png" class="mc-icon" alt="Crop"> Auto-Farm Crops: <span id="s-autoFarm">OFF</span>
+                </button>
+                <button class="mc-btn" onclick="toggle('autoShear')">
+                    <img src="mc_assets/item/shears.png" class="mc-icon" alt="Shears"> Auto-Shear Sheep: <span id="s-autoShear">OFF</span>
+                </button>
+                <button id="btn-deposit-chest" class="mc-btn" style="background-color: #f57c00 !important;">
+                    <img src="mc_assets/item/chest_minecart.png" class="mc-icon" alt="Chest"> Deposit Crops to Chest
+                </button>
+            </div>
+        </div>
+
+        <!-- CHEST AUTO-SORTER -->
+        <div class="mc-panel">
+            <h4 style="margin: 0 0 8px 0; color: #ab47bc;">
+                <img src="mc_assets/item/hopper.png" class="mc-icon" alt="Sorter"> Smart Auto-Chest Sorter
+            </h4>
+            <div style="font-size: 11px; color: #aaa; margin-bottom: 8px;">
+                Автоматически находит сундуки вокруг, собирает предметы и раскладывает их по категориям.
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button id="btn-start-sort" class="mc-btn" style="background-color: #8e24aa !important;">
+                    <img src="mc_assets/item/bundle.png" class="mc-icon" alt="Bundle"> Start Auto-Sort
+                </button>
+                <button id="btn-stop-sort" class="mc-btn" style="background-color: #d32f2f !important;">🛑 Stop</button>
+            </div>
+        </div>
+
+        <!-- PATROL ROUTES -->
+        <div class="mc-panel">
+            <h4 style="margin: 0 0 8px 0; color: #ffb74d;">
+                <img src="mc_assets/item/repeater.png" class="mc-icon" alt="Patrol"> Patrol Routes
+            </h4>
+            <div style="display: flex; gap: 5px; margin-bottom: 6px;">
+                <select id="patrol-mode" class="mc-input" style="font-size: 11px;">
+                    <option value="loop">Loop (Зациклить)</option>
+                    <option value="once">Once (1 раз)</option>
+                </select>
+                <input type="number" id="patrol-delay" class="mc-input" style="width: 70px; font-size: 11px;" value="3" placeholder="Sec">
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button id="btn-start-patrol" class="mc-btn" style="background-color: #388e3c !important;">▶ Start Patrol</button>
+                <button id="btn-stop-patrol" class="mc-btn" style="background-color: #d32f2f !important;">🛑 Stop</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="gutter gutter-col" id="gutter-col"></div>
+
+    <div class="main-content" id="main-content">
+        <div class="viewer-container" id="viewer-container">
+            <div class="view-controls">
+                <button id="btn-1st" class="mc-btn view-btn active" onclick="changeView('1st')">1st Person</button>
+                <button id="btn-3rd" class="mc-btn view-btn" onclick="changeView('3rd')">3rd Person</button>
+                <button id="btn-free" class="mc-btn view-btn" onclick="changeView('free')">Freecam</button>
+                <button class="mc-btn view-btn" style="background-color: #2e7d32 !important;" onclick="triggerPointWalk()">🎯 Point & Walk</button>
+                <button class="mc-btn view-btn" onclick="toggleViewerFullscreen()">📺 Fullscreen</button>
+            </div>
+            <div class="viewer-crosshair">+</div>
+            <iframe id="viewer-frame" src="http://localhost:3007" class="viewer-frame" title="Bot View" allow="pointer-lock"></iframe>
+        </div>
+
+        <div class="gutter gutter-row" id="gutter-row"></div>
+
+        <div class="chat-container" id="chat-container">
+            <div class="chat-header">Minecraft Server Chat Log</div>
+            <div id="chat-box">
+                <div style="color: #ffff55; font-style: italic;">Система готова. Ожидание бота...</div>
+            </div>
+
+            <div style="padding: 4px 8px; background: #111;">
+                <div class="quick-chat-row">
+                    <span style="font-size: 10px; color: #aaa; margin-right: 4px; align-self: center;">Macros:</span>
+                    <button class="mc-btn" onclick="sendQuickChat('/kill')">/kill</button>
+                    <button class="mc-btn" onclick="sendQuickChat('/help')">/help</button>
+                    <button class="mc-btn" onclick="sendQuickChat('/spawn')">/spawn</button>
+                    <button class="mc-btn" onclick="sendQuickChat('/home')">/home</button>
+                </div>
+            </div>
+
+            <form id="chat-form" class="chat-input-area">
+                <input type="text" id="msg-input" class="mc-input" placeholder="Введите сообщение или команду..." autocomplete="off">
+                <button type="submit" class="mc-btn" style="width: auto; margin:0; padding: 5px 15px;">&gt;</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN HD WORLD MAP MODAL -->
+    <div id="map-modal" class="tab-overlay" style="display: none;" onclick="toggleMapModal()">
+        <div class="map-modal-content" onclick="event.stopPropagation()">
+            <div class="tab-header-row" style="width: 100%; margin-bottom: 6px;">
+                <h3 style="margin: 0; color: #55ff55; display: flex; align-items: center; gap: 6px;">
+                    <img src="mc_assets/item/map.png" class="mc-icon" alt="Map"> Interactive Real World Map
+                </h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span style="font-size: 11px; color: #aaa;">Click to Walk | Drag to Pan | Scroll to Zoom</span>
+                    <button class="mc-btn close-btn" onclick="toggleMapModal()">X</button>
+                </div>
+            </div>
+
+            <!-- Map Toolbar Controls -->
+            <div class="map-toolbar">
+                <div class="map-toolbar-group">
+                    <button class="mc-btn map-tool-btn" onclick="zoomMap(0.25)" title="Zoom In">🔍 +</button>
+                    <button class="mc-btn map-tool-btn" onclick="zoomMap(-0.25)" title="Zoom Out">🔍 -</button>
+                    <button class="mc-btn map-tool-btn" onclick="resetMapCenter()" title="Center on Bot">🎯 Center</button>
+                </div>
+                <div class="map-toolbar-group map-layers-group">
+                    <span style="font-size: 11px; color: #ffaa00; font-weight: bold; margin-right: 2px;">Layers:</span>
+                    <button id="layer-terrain" class="mc-btn map-layer-btn active" onclick="toggleMapLayer('terrain')">🌲 Terrain</button>
+                    <button id="layer-shading" class="mc-btn map-layer-btn active" onclick="toggleMapLayer('shading')">⛰️ Relief</button>
+                    <button id="layer-entities" class="mc-btn map-layer-btn active" onclick="toggleMapLayer('entities')">👾 Mobs</button>
+                    <button id="layer-waypoints" class="mc-btn map-layer-btn active" onclick="toggleMapLayer('waypoints')">📍 Waypoints</button>
+                    <button id="layer-grid" class="mc-btn map-layer-btn" onclick="toggleMapLayer('grid')">🌐 Grid</button>
+                </div>
+            </div>
+
+            <canvas id="world-map-canvas" width="800" height="480" style="border: 2px solid #555; cursor: crosshair; display: block; margin: auto; background: #0f1115;"></canvas>
+            
+            <!-- Map Status & Coordinates Inspector Bar -->
+            <div id="map-status-bar" class="map-status-bar">
+                <span>🤖 Bot Position: X: <b>0</b> Y: <b>0</b> Z: <b>0</b></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB LIST MODAL -->
+    <div id="tab-modal" class="tab-overlay" style="display: none;" onclick="toggleTabList()">
+        <div class="tab-content" onclick="event.stopPropagation()">
+            <div class="tab-header-row">
+                <h3 style="margin: 0; text-shadow: 2px 2px #000;">Online Players (<span id="player-count">0</span>)</h3>
+                <input type="text" id="tab-search-input" class="mc-input" style="width: 200px; font-size: 12px; padding: 4px;" placeholder="🔍 Поиск игрока..." oninput="filterTabPlayers()">
+                <button class="mc-btn close-btn" onclick="toggleTabList()">X</button>
+            </div>
+            <div id="player-grid" class="player-grid"></div>
+        </div>
+    </div>
+
+    <!-- NON-RELOADING SETTINGS OVERLAY MODAL -->
+    <div id="settings-modal" class="tab-overlay" style="display: none;" onclick="toggleSettingsModal()">
+        <div class="settings-modal-content" onclick="event.stopPropagation()">
+            <div class="tab-header-row">
+                <h2 style="margin: 0; color: #ffffff; text-shadow: 2px 2px #000; display: flex; align-items: center; gap: 8px;">
+                    <img src="mc_assets/item/comparator.png" class="mc-icon" style="width: 22px; height: 22px;" alt="Settings"> ⚙️ BOT SETTINGS
+                </h2>
+                <button class="mc-btn close-btn" onclick="toggleSettingsModal()">X</button>
+            </div>
+
+            <form id="modal-settings-form" onsubmit="saveModalConfig(event)">
+                <!-- MINECRAFT SERVER -->
+                <div class="settings-group mc-panel">
+                    <h3><img src="mc_assets/item/redstone.png" class="mc-icon" alt="Server"> Minecraft Server Connection</h3>
+                    <div class="form-row">
+                        <label>Server Host / IP:</label>
+                        <input type="text" id="modal-mc-host" required>
+                    </div>
+                    <div class="form-row">
+                        <label>Server Port:</label>
+                        <input type="number" id="modal-mc-port" value="25565">
+                    </div>
+                    <div class="form-row">
+                        <label>Bot Username:</label>
+                        <input type="text" id="modal-mc-username" required>
+                    </div>
+                    <div class="form-row">
+                        <label>Auth Type:</label>
+                        <select id="modal-mc-auth">
+                            <option value="microsoft">Microsoft</option>
+                            <option value="mojang">Mojang</option>
+                            <option value="offline">Offline / Offline Mode</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Minecraft Version:</label>
+                        <input type="text" id="modal-mc-version" value="1.21.4">
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-mc-autoreconnect">
+                        <label for="modal-mc-autoreconnect">Enable Auto-Reconnect</label>
+                    </div>
+                </div>
+
+                <!-- BOT STATE -->
+                <div class="settings-group mc-panel">
+                    <h3><img src="mc_assets/item/totem_of_undying.png" class="mc-icon" alt="Bot"> Default Bot Behavior</h3>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-bs-attacking">
+                        <label for="modal-bs-attacking">Auto-Attack Mobs</label>
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-bs-antiafk">
+                        <label for="modal-bs-antiafk">Anti-AFK Movement</label>
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-bs-looker">
+                        <label for="modal-bs-looker">Looker (Track nearby players)</label>
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-bs-antispam">
+                        <label for="modal-bs-antispam">Anti-Spam Chat Filter</label>
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-bs-totem">
+                        <label for="modal-bs-totem">Auto-Equip Totem of Undying in Offhand</label>
+                    </div>
+                </div>
+
+                <!-- VIEWER SETTINGS -->
+                <div class="settings-group mc-panel">
+                    <h3><img src="mc_assets/item/ender_eye.png" class="mc-icon" alt="Viewer"> Camera & 3D Viewer</h3>
+                    <div class="form-row">
+                        <label>Viewer Port:</label>
+                        <input type="number" id="modal-v-port" value="3007">
+                    </div>
+                    <div class="form-row">
+                        <label>Render View Distance (chunks):</label>
+                        <input type="number" id="modal-v-distance" min="1" max="16" value="6">
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-v-firstperson">
+                        <label for="modal-v-firstperson">First Person Mode by default</label>
+                    </div>
+                </div>
+
+                <!-- CHEST SORTING SETTINGS -->
+                <div class="settings-group mc-panel">
+                    <h3><img src="mc_assets/item/hopper.png" class="mc-icon" alt="Chest"> Chest Auto-Sorter Settings</h3>
+                    <div class="form-row">
+                        <label>Search Radius (blocks):</label>
+                        <input type="number" id="modal-cs-radius" min="4" max="32" value="16">
+                    </div>
+                    <div class="form-row">
+                        <label>Pathfinding Timeout (ms):</label>
+                        <input type="number" id="modal-cs-timeout" value="8000">
+                    </div>
+                </div>
+
+                <!-- TELEGRAM BOT -->
+                <div class="settings-group mc-panel">
+                    <h3><img src="mc_assets/item/paper.png" class="mc-icon" alt="Telegram"> Telegram Bot Integration</h3>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-tg-enabled">
+                        <label for="modal-tg-enabled">Enable Telegram Bot Integration</label>
+                    </div>
+                    <div class="form-row">
+                        <label>Bot API Token (from @BotFather):</label>
+                        <input type="text" id="modal-tg-token" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                    </div>
+                    <div class="form-row">
+                        <label>Default Chat ID:</label>
+                        <input type="text" id="modal-tg-chatid" placeholder="-100123456789">
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-tg-fwd-mctg">
+                        <label for="modal-tg-fwd-mctg">Forward Minecraft Chat to Telegram</label>
+                    </div>
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="modal-tg-fwd-tgmc">
+                        <label for="modal-tg-fwd-tgmc">Forward Telegram Messages to Minecraft Chat</label>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; text-align: center;">
+                    <button type="submit" class="mc-btn" style="background-color: #388e3c !important; font-size: 15px; padding: 10px 20px;">
+                        💾 Save Settings
+                    </button>
+                    <div id="modal-save-status" style="margin-top: 10px; font-style: italic; text-align: center;"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

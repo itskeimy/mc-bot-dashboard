@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Bot Settings</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="stylesheet" href="style.css?v=5004">
+    <script src="js/sounds.js?v=5004"></script>
+    <script src="js/ui.js?v=5004"></script>
+</head>
+<body class="theme-dark" style="overflow-y: auto;">
+    <div class="settings-container">
+        <div class="top-nav" style="background: none; padding: 0 0 15px 0; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #ffffff; text-shadow: 2px 2px #000;">⚙️ BOT SETTINGS</h2>
+            <a href="index.html" class="mc-btn" style="width: auto; margin:0; padding: 6px 15px;">🔙 Dashboard</a>
+        </div>
+
+        <form id="settings-form">
+            <!-- MINECRAFT SERVER -->
+            <div class="settings-group mc-panel">
+                <h3>🔌 Minecraft Server Connection</h3>
+                <div class="form-row">
+                    <label>Server Host / IP:</label>
+                    <input type="text" id="mc-host" name="minecraft.host" required>
+                </div>
+                <div class="form-row">
+                    <label>Server Port:</label>
+                    <input type="number" id="mc-port" name="minecraft.port" value="25565">
+                </div>
+                <div class="form-row">
+                    <label>Bot Username:</label>
+                    <input type="text" id="mc-username" name="minecraft.username" required>
+                </div>
+                <div class="form-row">
+                    <label>Auth Type:</label>
+                    <select id="mc-auth" name="minecraft.auth">
+                        <option value="microsoft">Microsoft</option>
+                        <option value="mojang">Mojang</option>
+                        <option value="offline">Offline / Offline Mode</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Minecraft Version:</label>
+                    <input type="text" id="mc-version" name="minecraft.version" value="1.21.4">
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="mc-autoreconnect" name="minecraft.autoReconnect">
+                    <label for="mc-autoreconnect">Enable Auto-Reconnect</label>
+                </div>
+            </div>
+
+            <!-- BOT STATE -->
+            <div class="settings-group mc-panel">
+                <h3>🤖 Default Bot Behavior</h3>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="bs-attacking" name="botState.isAttacking">
+                    <label for="bs-attacking">Auto-Attack Mobs</label>
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="bs-antiafk" name="botState.isAntiAfk">
+                    <label for="bs-antiafk">Anti-AFK Movement</label>
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="bs-looker" name="botState.isLooker">
+                    <label for="bs-looker">Looker (Track nearby players)</label>
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="bs-antispam" name="botState.isAntiSpam">
+                    <label for="bs-antispam">Anti-Spam Chat Filter</label>
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="bs-totem" name="botState.autoTotem">
+                    <label for="bs-totem">Auto-Equip Totem of Undying in Offhand</label>
+                </div>
+            </div>
+
+            <!-- VIEWER SETTINGS -->
+            <div class="settings-group mc-panel">
+                <h3>📷 Camera & 3D Viewer</h3>
+                <div class="form-row">
+                    <label>Viewer Port:</label>
+                    <input type="number" id="v-port" name="server.viewerPort" value="3007">
+                </div>
+                <div class="form-row">
+                    <label>Render View Distance (chunks):</label>
+                    <input type="number" id="v-distance" name="viewer.viewDistance" min="1" max="16" value="6">
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="v-firstperson" name="viewer.firstPerson">
+                    <label for="v-firstperson">First Person Mode by default</label>
+                </div>
+            </div>
+
+            <!-- CHEST SORTING SETTINGS -->
+            <div class="settings-group mc-panel">
+                <h3>🗃 Chest Auto-Sorter Reliability Settings</h3>
+                <div class="form-row">
+                    <label>Search Radius (blocks):</label>
+                    <input type="number" id="cs-radius" name="chestSorting.searchRadius" min="4" max="32" value="16">
+                </div>
+                <div class="form-row">
+                    <label>Pathfinding Timeout (ms):</label>
+                    <input type="number" id="cs-timeout" name="chestSorting.timeoutMs" value="8000">
+                </div>
+            </div>
+
+            <!-- TELEGRAM BOT -->
+            <div class="settings-group mc-panel">
+                <h3>🤖 Telegram Bot Integration</h3>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="tg-enabled" name="telegram.enabled">
+                    <label for="tg-enabled">Enable Telegram Bot Integration</label>
+                </div>
+                <div class="form-row">
+                    <label>Bot API Token (from @BotFather):</label>
+                    <input type="text" id="tg-token" name="telegram.token" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                </div>
+                <div class="form-row">
+                    <label>Default Chat ID:</label>
+                    <input type="text" id="tg-chatid" name="telegram.chatId" placeholder="-100123456789">
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="tg-fwd-mctg" name="telegram.forwardMcToTg">
+                    <label for="tg-fwd-mctg">Forward Minecraft Chat to Telegram</label>
+                </div>
+                <div class="form-row checkbox-row">
+                    <input type="checkbox" id="tg-fwd-tgmc" name="telegram.forwardTgToMc">
+                    <label for="tg-fwd-tgmc">Forward Telegram Messages to Minecraft Chat</label>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button type="submit" class="mc-btn" style="background-color: #388e3c !important; font-size: 16px;">💾 Save Settings</button>
+                <div id="save-status" style="margin-top: 10px; font-style: italic; text-align: center;"></div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const config = await res.json();
+
+                // Populate values
+                document.getElementById('mc-host').value = config.minecraft.host || '';
+                document.getElementById('mc-port').value = config.minecraft.port || 25565;
+                document.getElementById('mc-username').value = config.minecraft.username || '';
+                document.getElementById('mc-auth').value = config.minecraft.auth || 'microsoft';
+                document.getElementById('mc-version').value = config.minecraft.version || '1.21.4';
+                document.getElementById('mc-autoreconnect').checked = !!config.minecraft.autoReconnect;
+
+                document.getElementById('bs-attacking').checked = !!config.botState.isAttacking;
+                document.getElementById('bs-antiafk').checked = !!config.botState.isAntiAfk;
+                document.getElementById('bs-looker').checked = !!config.botState.isLooker;
+                document.getElementById('bs-antispam').checked = !!config.botState.isAntiSpam;
+                document.getElementById('bs-totem').checked = !!config.botState.autoTotem;
+
+                document.getElementById('v-port').value = config.server.viewerPort || 3007;
+                document.getElementById('v-distance').value = config.viewer.viewDistance || 6;
+                document.getElementById('v-firstperson').checked = !!config.viewer.firstPerson;
+
+                if (config.chestSorting) {
+                    document.getElementById('cs-radius').value = config.chestSorting.searchRadius || 16;
+                    document.getElementById('cs-timeout').value = config.chestSorting.timeoutMs || 8000;
+                }
+
+                document.getElementById('tg-enabled').checked = !!config.telegram.enabled;
+                document.getElementById('tg-token').value = config.telegram.token || '';
+                document.getElementById('tg-chatid').value = config.telegram.chatId || '';
+                document.getElementById('tg-fwd-mctg').checked = !!config.telegram.forwardMcToTg;
+                document.getElementById('tg-fwd-tgmc').checked = !!config.telegram.forwardTgToMc;
+
+                if (typeof initMinecraftInputs === 'function') initMinecraftInputs();
+            } catch (e) {
+                console.error('Error loading config', e);
+            }
+        }
+
+        document.getElementById('settings-form').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const statusEl = document.getElementById('save-status');
+            statusEl.innerText = 'Сохранение...';
+
+            const payload = {
+                minecraft: {
+                    host: document.getElementById('mc-host').value,
+                    port: parseInt(document.getElementById('mc-port').value) || 25565,
+                    username: document.getElementById('mc-username').value,
+                    auth: document.getElementById('mc-auth').value,
+                    version: document.getElementById('mc-version').value,
+                    autoReconnect: document.getElementById('mc-autoreconnect').checked
+                },
+                botState: {
+                    isAttacking: document.getElementById('bs-attacking').checked,
+                    isAntiAfk: document.getElementById('bs-antiafk').checked,
+                    isLooker: document.getElementById('bs-looker').checked,
+                    isAntiSpam: document.getElementById('bs-antispam').checked,
+                    autoTotem: document.getElementById('bs-totem').checked
+                },
+                server: {
+                    viewerPort: parseInt(document.getElementById('v-port').value) || 3007
+                },
+                viewer: {
+                    viewDistance: parseInt(document.getElementById('v-distance').value) || 6,
+                    firstPerson: document.getElementById('v-firstperson').checked
+                },
+                chestSorting: {
+                    searchRadius: parseInt(document.getElementById('cs-radius').value) || 16,
+                    timeoutMs: parseInt(document.getElementById('cs-timeout').value) || 8000
+                },
+                telegram: {
+                    enabled: document.getElementById('tg-enabled').checked,
+                    token: document.getElementById('tg-token').value,
+                    chatId: document.getElementById('tg-chatid').value,
+                    forwardMcToTg: document.getElementById('tg-fwd-mctg').checked,
+                    forwardTgToMc: document.getElementById('tg-fwd-tgmc').checked
+                }
+            };
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    statusEl.style.color = '#55ff55';
+                    statusEl.innerText = '✅ Настройки успешно сохранены!';
+                } else {
+                    statusEl.style.color = '#ff5555';
+                    statusEl.innerText = '❌ Ошибка сохранения.';
+                }
+            } catch (err) {
+                statusEl.style.color = '#ff5555';
+                statusEl.innerText = '❌ Ошибка сети: ' + err.message;
+            }
+        };
+
+        loadConfig();
+    </script>
+</body>
+</html>
